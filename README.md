@@ -52,19 +52,70 @@ required.
 
 ### Simplified Block Diagram
 
-<img width="600" height="456" alt="image" src="https://github.com/user-attachments/assets/1d1135ac-67da-4330-8d2a-419d3a170f7a" />
++-----------------------------------+
+                 |          8086 MICROPROCESSOR     |
+                 |                                   |
+Memory / I/O <-->+-----------------------------------+<--> System Bus
+                 |       Bus Interface Unit (BIU)    |
+                 |  +-----------------------------+  |
+                 |  | Segment Registers            |  |
+                 |  | CS, DS, SS, ES               |  |
+                 |  +-----------------------------+  |
+                 |  | Instruction Pointer (IP)     |  |
+                 |  +-----------------------------+  |
+                 |  | 6-byte Instruction Queue     |  |
+                 |  +-----------------------------+  |
+                 |  | Address Generation / Bus     |  |
+                 |  | Control                      |  |
+                 |  +---------------+-------------+  |
+                 |                  |                |
+                 |       Instruction/Data Interface  |
+                 |                  |                |
+                 |       Execution Unit (EU)         |
+                 |  +-----------------------------+  |
+                 |  | Instruction Decoder &       |  |
+                 |  | Control Circuitry           |  |
+                 |  +-----------------------------+  |
+                 |  | ALU                         |  |
+                 |  +-----------------------------+  |
+                 |  | AX, BX, CX, DX               |  |
+                 |  | SP, BP, SI, DI               |  |
+                 |  | Flag Register                |  |
+                 |  +-----------------------------+  |
+                 +-----------------------------------+
+
 
 
 
 
 ### Working Principle
+Bus Interface Unit (BIU)
+The BIU handles all external bus operations and data transfers between the microprocessor and memory/I/O devices.
 
-The BIU fetches instruction bytes and stores them in its 6-byte queue
-while the EU executes instructions already available in the queue. When
-the EU needs memory or I/O access, it requests the BIU to perform the
-bus operation. A change in program flow, such as a jump, may cause the
-instruction queue to be flushed and refilled.
+Key Responsibilities: Generates 20-bit physical memory addresses, fetches instructions from memory, and reads/writes operands.
 
+Components:
+
+Segment Registers: Code Segment (CS), Data Segment (DS), Stack Segment (SS), and Extra Segment (ES) used for memory segmentation.
+
+Instruction Pointer (IP): Holds the offset address of the next instruction to be executed.
+
+Instruction Queue: A 6-byte prefetch queue that stores instructions fetched in advance from memory.
+
+2. Execution Unit (EU)
+The EU is responsible for decoding and executing the instructions received from the BIU.
+
+Key Responsibilities: Performs arithmetic and logical operations, manages internal registers, and signals the BIU when memory or I/O access is required.
+
+Components:
+
+Arithmetic Logic Unit (ALU): Handles 16-bit arithmetic and logical operations.
+
+General-Purpose Registers: AX, BX, CX, and DX (can also be accessed as individual 8-bit halves like AH, AL, BH, BL, etc.).
+
+Pointer and Index Registers: Stack Pointer (SP), Base Pointer (BP), Source Index (SI), and Destination Index (DI).
+
+Flag Register: A 16-bit register containing status flags (carry, zero, sign, overflow, etc.) and control flags.
 ------------------------------------------------------------------------
 
 ## Part (b): Transfer a 16-bit Value Between Registers and Store It in Memory
@@ -136,7 +187,27 @@ Write an 8086 assembly language program to exchange the contents of two
 5.  Stop the program.
 
 ### Assembly Program
+.MODEL SMALL
+.STACK 100H
 
+.DATA
+    VALUE1 DW 1111H
+    VALUE2 DW 2222H
+
+.CODE
+MAIN PROC
+    MOV AX, @DATA
+    MOV DS, AX
+
+    MOV AX, VALUE1      ; Load first memory value into AX (AX = 1111H)
+    MOV BX, VALUE2      ; Load second memory value into BX (BX = 2222H)
+    MOV VALUE1, BX      ; Store BX into VALUE1 (VALUE1 = 2222H)
+    MOV VALUE2, AX      ; Store AX into VALUE2 (VALUE2 = 1111H)
+
+    MOV AH, 4CH
+    INT 21H
+MAIN ENDP
+END MAIN
  
 
 ### Expected Result
